@@ -28,6 +28,11 @@ pub mod console;
 /// Safe routines for dealing with files and handles on Windows.
 #[cfg(windows)]
 pub mod file;
+#[cfg(all(windows, feature = "open_process"))]
+/// Safe wrappers around [`OpenProcess`] function and the resulting handle.
+///
+/// [`OpenProcess`]: https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-openprocess
+pub mod open_process;
 #[cfg(windows)]
 /// Safe routines for querying various Windows specific properties.
 pub mod sysinfo;
