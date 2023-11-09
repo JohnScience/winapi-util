@@ -28,9 +28,13 @@ features = [
   "winnt",
 ]
 
+[target.'cfg(windows)'.dependencies.thiserror]
+version = "1.0"
+optional = true
+
 [features]
 default = ["open_process"]
-open_process = ["winapi/handleapi"]
+open_process = ["winapi/handleapi", "thiserror"]
 
 [package.metadata.docs.rs]
 targets = ["x86_64-pc-windows-msvc"]

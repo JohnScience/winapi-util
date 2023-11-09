@@ -4,6 +4,10 @@ use winapi::shared::minwindef::BOOL;
 use winapi::um::winnt::HANDLE;
 use winapi::{shared::minwindef::DWORD, um::processthreadsapi::OpenProcess};
 
+mod error;
+
+pub use error::{Error, ErrorCode};
+
 mod sealed {
     use core::ffi::c_void;
     use core::marker::PhantomData;
@@ -117,7 +121,7 @@ pub fn open_process<R: IntoAccessRights>(
     desired_access: R::RuntimeArgumentType,
     inherit_handle: bool,
     process_id: DWORD,
-) -> Option<ProcessHandle<R::AccessRightsType>> {
+) -> Result<ProcessHandle<R::AccessRightsType>, Error> {
     let dw_desired_access: DWORD = R::rt_arg_to_dword(desired_access);
     let inherit_handle: BOOL = if inherit_handle { 1 } else { 0 };
 
@@ -125,10 +129,10 @@ pub fn open_process<R: IntoAccessRights>(
 
     let handle: HANDLE =
         unsafe { OpenProcess(dw_desired_access, inherit_handle, process_id) };
-    let inner = NonNull::new(handle)?;
+    let inner = NonNull::new(handle).ok_or(Error(PhantomData))?;
 
     let handle = Handle { phantom_kind: PhantomData, metadata, inner };
-    Some(handle)
+    Ok(handle)
 }
 
 impl<const N: DWORD> HandleMetadata for ComptimeAccessRights<N> {
@@ -180,7 +184,7 @@ mod tests {
             false,
             std::process::id(),
         );
-        assert!(handle.is_some());
+        let _handle = handle.unwrap();
     }
 
     #[test]
@@ -188,6 +192,6 @@ mod tests {
         let handle = open_process::<
             ComptimeAccessRights<PROCESS_QUERY_INFORMATION>,
         >(PhantomData, false, std::process::id());
-        assert!(handle.is_some());
+        let _handle = handle.unwrap();
     }
 }
